@@ -1,161 +1,186 @@
 from engine.context.context import *
 from typing import *
 
-
 class Node:
     """
-    Nodes are tree-like objects used to organise every aspect of your game.
+    Nodes are hierarchical elements used to organize all aspects of the game.
     """
-    def __init__(self, context:Context, label:str="Node"):
+
+    def __init__(self, context: Context, label: str = "Node"):
         """
+        Initializes a new Node.
+
         Args:
-            context (Context): context the node is linked to
-            label (str, optional): name of the node
-        Properties:
+            context (Context): The game context to which the node belongs.
+            label (str, optional): The name of the node. Defaults to "Node".
         """
-        self.context = context
-        self.label = label
-        self.update_ = True
-        self.children = []
-        self.tags = set({"@" + label})
-        self.parent = None
-        self.order = 0
-        
-    def _tag_filter(self, element:"Node", tags:Set[str], ignore:Set[str]): 
-        return   all(tag in element.tags for tag in tags) \
-         and not any(tag in element.tags for tag in ignore)
-    
+        self.context: Context = context
+        self.label: str = label
+        self.update_: bool = True
+        self.children: List["Node"] = []
+        self.tags: Set[str] = set({"@" + label})
+        self.parent: "Node" | None = None
+        self.order: int = 0
+
+    def _tag_filter(self, element: "Node", tags: Set[str], ignore: Set[str]) -> bool:
+        return all(tag in element.tags for tag in tags) and not any(tag in element.tags for tag in ignore)
+
     def __children_sort(self):
-        self.children.sort(key = lambda child : child.order, reverse = True)
-        
+        self.children.sort(key=lambda child: child.order, reverse=True)
+
     @property
-    def root(self):
-        """  
-        root of the tree where the node is located.
+    def root(self) -> "Node":
         """
-        if self.parent != None:
-            return self.parent.root 
-        return self 
-        
-    def link(self, child:"Node"):
-        """ 
-        add a new child the node.
+        Returns the root node of the hierarchy.
+        """
+        return self.parent.root if self.parent is not None else self
+
+    def link(self, child: "Node"):
+        """
+        Adds a child node to this node.
+
+        Args:
+            child (Node): The child node to add.
         """
         self.children.append(child)
         child.parent = self
-        
+
     def unlink(self):
-        """  
-        separate the node from it's parent
+        """
+        Detaches this node from its parent.
         """
         if self.parent:
             self.parent.children.remove(self)
             self.parent = None
 
     def update(self):
-        """  
-        method called when the node is updated.
+        """
+        Called when the node is updated. Override this method in subclasses.
         """
         pass
-    
-    def on_message(self, type:str, content:dict, source:"Node"):
-        """ 
-        method called when the node receive a signal.
-        
+
+    def on_message(self, type: str, content: dict, source: "Node") -> Optional[bool]:
+        """
+        Called when the node receives a message.
+
         Args:
-            content (str): content of the signal.
-            source (None): first emiter of the signal.
-        
+            type (str): The type of the message.
+            content (dict): The message content.
+            source (Node): The original emitter of the message.
+
         Returns:
-            True: continue to emit the signal.
-            False: stop completly the signal.
-            None: continue to emit the signal (except the current node children).
+            True: Continue propagating the message to children.
+            False: Stop propagation completely.
+            None: Do not propagate to children of this node, but continue otherwise.
         """
         return True
-    
+
     def update_all(self):
-        """ 
-        update the node and all it's children.
+        """
+        Updates this node and all its children recursively.
         """
         if self.update_:
             self.update()
             self.__children_sort()
             for child in self.children:
                 child.update_all()
-                
-    def get_descendants(self, tags:Set[str] = set({}), ignore:Set[str] = set({})):
-        """  
-        get the descendants of the node in the tree hierarchy.
+
+    def get_descendants(self, tags: Set[str] = set(), ignore: Set[str] = set()) -> List["Node"]:
+        """
+        Returns all descendant nodes that match the given tag filters.
+
         Args:
-            tags (Set[str], optional): tags that every searched nodes must include.
-            ignore (Set[str], optional): tags that every searched nodes must not include.
+            tags (Set[str], optional): Required tags.
+            ignore (Set[str], optional): Tags to exclude.
+
+        Returns:
+            List[Node]: The matching descendant nodes.
         """
         output = []
-        def recursive_search(self):
-            self.__children_sort()
-            for child in self.children:
+
+        def recursive_search(node: "Node"):
+            node.__children_sort()
+            for child in node.children:
                 if self._tag_filter(child, tags, ignore):
                     output.append(child)
                 recursive_search(child)
+
         recursive_search(self)
         return output
-    
-    def get_ancestors(self, tags:Set[str] = set({}), ignore:Set[str] = set({})):
-        """  
-        get the ancestors of the node in the tree hierarchy.
+
+    def get_ancestors(self, tags: Set[str] = set(), ignore: Set[str] = set()) -> List["Node"]:
+        """
+        Returns all ancestor nodes that match the given tag filters.
+
         Args:
-            tags (Set[str], optional): tags that every searched nodes must include.
-            ignore (Set[str], optional): tags that every searched nodes must not include.
+            tags (Set[str], optional): Required tags.
+            ignore (Set[str], optional): Tags to exclude.
+
+        Returns:
+            List[Node]: The matching ancestor nodes.
         """
         output = []
-        def recursive_search(self):
-            if self._tag_filter(self, tags, ignore):
-                output.append(self)
-                if self.parent != None:
-                    recursive_search(self.parent)
-        if self.parent != None:
+
+        def recursive_search(node: "Node"):
+            if self._tag_filter(node, tags, ignore):
+                output.append(node)
+            if node.parent is not None:
+                recursive_search(node.parent)
+
+        if self.parent is not None:
             recursive_search(self.parent)
         return output
-    
-    def get_siblings(self, tags:Set[str] = set({}), ignore:Set[str] = set({})):
-        """  
-        get the siblings of the node in the tree hierarchy.
+
+    def get_siblings(self, tags: Set[str] = set(), ignore: Set[str] = set()) -> List["Node"]:
+        """
+        Returns all sibling nodes that match the given tag filters.
+
         Args:
-            tags (Set[str], optional): tags that every searched nodes must include.
-            ignore (Set[str], optional): tags that every searched nodes must not include.
+            tags (Set[str], optional): Required tags.
+            ignore (Set[str], optional): Tags to exclude.
+
+        Returns:
+            List[Node]: The matching sibling nodes.
         """
         return list(
             filter(
-                lambda element : self._tag_filter(element, tags, ignore), 
+                lambda element: self._tag_filter(element, tags, ignore),
                 self.parent.children
             )
         )
-            
+
     def __repr__(self):
         return f'<{self.label}>'
-    
-    def debug(self, spaces:int = 4):
-        """  
-        displays the node in the console with a markdown format.
-        Args:
-            spaces (int, optional): lenght of each identation.
+
+    def debug(self, spaces: int = 4):
         """
-        def recursive_helper(self, id):  
-            if self.children == []:
-                print(" "*(id * spaces) + self.__repr__()[:-1] + "/>")
-            else:
-                print(" "*(id * spaces) + self.__repr__())
-                for child in self.children:
-                    recursive_helper(child, id+1)
-                print(" "*(id * spaces) + self.__repr__()[:-1] + "/>")
-        recursive_helper(self, 0)
-    
-    def message(self, type:str, content:dict = {}, _source:"Node" = None):
-        """ 
-        emit a message to every descendant of the node.
+        Prints the node hierarchy in a structured, indented format.
+
         Args:
-            type (str): type of the message
-            content (dict): content of the message
+            spaces (int, optional): The number of spaces per indentation level.
+        """
+        def recursive_helper(node: "Node", level: int):
+            if not node.children:
+                print(" " * (level * spaces) + node.__repr__()[:-1] + "/>")
+            else:
+                print(" " * (level * spaces) + node.__repr__())
+                for child in node.children:
+                    recursive_helper(child, level + 1)
+                print(" " * (level * spaces) + node.__repr__()[:-1] + "/>")
+
+        recursive_helper(self, 0)
+
+    def message(self, type: str, content: dict = {}, _source: "Node" = None) -> bool:
+        """
+        Sends a message to all descendants of this node.
+
+        Args:
+            type (str): The type of the message.
+            content (dict): The message content.
+            _source (Node, optional): The original sender. Defaults to self.
+
+        Returns:
+            bool: False if propagation is stopped, True otherwise.
         """
         if _source is None:
             _source = self
@@ -170,9 +195,3 @@ class Node:
             elif result is None:
                 continue
         return True
-
-            
-            
-    
-        
-            
