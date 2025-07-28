@@ -54,10 +54,24 @@ class Node:
 
     def update(self):
         """  
-        Abstract method called when the node is updated.
+        method called when the node is updated.
         """
-        print(self, end=" ")
-        print("updated")
+        pass
+    
+    def on_message(self, type:str, content:dict, source:"Node"):
+        """ 
+        method called when the node receive a signal.
+        
+        Args:
+            content (str): content of the signal.
+            source (None): first emiter of the signal.
+        
+        Returns:
+            True: continue to emit the signal.
+            False: stop completly the signal.
+            None: continue to emit the signal (except the current node children).
+        """
+        return True
     
     def update_all(self):
         """ 
@@ -135,4 +149,30 @@ class Node:
                     recursive_helper(child, id+1)
                 print(" "*(id * spaces) + self.__repr__()[:-1] + "/>")
         recursive_helper(self, 0)
+    
+    def message(self, type:str, content:dict = {}, _source:"Node" = None):
+        """ 
+        emit a message to every descendant of the node.
+        Args:
+            type (str): type of the message
+            content (dict): content of the message
+        """
+        if _source is None:
+            _source = self
+        self.__children_sort()
+        for child in self.children:
+            result = child.on_message(type, content, _source)
+            if result is False:
+                return False
+            elif result is True:
+                if child.message(type, content, _source) is False:
+                    return False
+            elif result is None:
+                continue
+        return True
+
+            
+            
+    
         
+            
