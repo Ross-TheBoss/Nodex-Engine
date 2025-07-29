@@ -1,4 +1,6 @@
-import pygame, sys, time
+import pygame
+import sys
+import time
 from typing import Callable, Any
 
 from engine.colors import *

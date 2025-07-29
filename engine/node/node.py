@@ -5,6 +5,24 @@ class Node:
     """
     Nodes are hierarchical elements used to organize all aspects of the game.
     """
+    
+    _id_counter = 0
+    
+    
+    def build(data:dict) -> "Node":
+        """ 
+        Build a new node from serialized data.
+        
+        Args:
+            data (dict): The dictionary containing serialized node data.
+            
+        Returns:
+            Node: The reconstructed node instance with its full subtree.
+        """
+        node = _type_map[data["type"]](data["context"], data["label"])
+        node.children = [Node.build(child) for child in data["children"]]
+        return node
+        
 
     def __init__(self, context: Context, label: str = "Node"):
         """
@@ -21,6 +39,10 @@ class Node:
         self.tags: Set[str] = set({"@" + label})
         self.parent: "Node" | None = None
         self.order: int = 0
+        self.id: int = Node._id_counter
+        Node._id_counter += 1
+        self.content = {}
+        self.debug_info = {"hey" : 1, "hoo" : 3}
 
     def _tag_filter(self, element: "Node", tags: Set[str], ignore: Set[str]) -> bool:
         return all(tag in element.tags for tag in tags) and not any(tag in element.tags for tag in ignore)
@@ -58,6 +80,42 @@ class Node:
         Called when the node is updated. Override this method in subclasses.
         """
         pass
+    
+    def serialize(self):
+        """
+        Serializes this node and its subtree into a dictionary for saving.
+
+        Returns:
+            dict: A dictionary representation of this node and its children.
+        """
+        data = dict(self.content) 
+        data["type"] = self.__class__.__name__
+        data["label"] = self.label
+        data["context"] = self.context
+        if self.parent:
+            data["pid"] = self.parent.id
+        else:
+            data["pid"] = -1
+        data["children"] = [child.serialize() for child in self.children]
+        return data
+    
+    def search(self, id):
+        """
+        Searches recursively in the subtree for a node with a given ID.
+
+        Args:
+            id (int): The ID to search for.
+
+        Returns:
+            Node | None: The node with the matching ID, or None if not found.
+        """
+        if self.id == id:
+            return self
+        for child in self.children:
+            result = child.search(id)
+            if result:
+                return result
+        return None
 
     def on_message(self, type: str, content: dict, source: "Node") -> Optional[bool]:
         """
@@ -69,7 +127,7 @@ class Node:
             source (Node): The original emitter of the message.
 
         Returns:
-            True: Continue propagating the message to children.
+            True: Continue propagating the message.
             False: Stop propagation completely.
             None: Do not propagate to children of this node, but continue otherwise.
         """
@@ -150,7 +208,7 @@ class Node:
         )
 
     def __repr__(self):
-        return f'<{self.label}>'
+        return f'<{self.label} #{self.id}>'
 
     def debug(self, spaces: int = 4):
         """
@@ -195,3 +253,16 @@ class Node:
             elif result is None:
                 continue
         return True
+
+def _all_subclasses(cls):
+    """  
+    Create a dictionary mapping each subclass name of cls to its reference.
+    """
+    subclasses = set()
+    for subclass in cls.__subclasses__():
+        subclasses.add(subclass)
+        subclasses.update(_all_subclasses(subclass))
+    return subclasses
+
+_type_map = {cls.__name__: cls for cls in _all_subclasses(Node)}
+_type_map["Node"] = Node
