@@ -1,1 +1,3 @@
 KEYDOWN = 0
+KEYUP = 1
+QUIT = 2

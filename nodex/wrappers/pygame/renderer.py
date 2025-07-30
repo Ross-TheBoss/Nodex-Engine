@@ -9,7 +9,7 @@ class PygameRenderer(AbstractRenderer):
         self.window = window
         
     def draw(self, texture: PygameTexture, position : Tuple[int, int]):
-        self.window.display.blit(texture, position)
+        self.window.display.blit(texture.texture, position)
         
     def present(self):
         pygame.display.flip()
