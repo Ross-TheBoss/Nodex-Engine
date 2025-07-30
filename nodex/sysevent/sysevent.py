@@ -1,4 +1,4 @@
-class Event:
+class SystemEvent:
     """
     Represents a generic event with a type and optional custom attributes.
 

@@ -1,4 +1,4 @@
-from engine.context.context import *
+from nodex.context.context import *
 from typing import *
 
 class Node:
@@ -7,23 +7,7 @@ class Node:
     """
     
     _id_counter = 0
-    
-    
-    def build(data:dict) -> "Node":
-        """ 
-        Build a new node from serialized data.
         
-        Args:
-            data (dict): The dictionary containing serialized node data.
-            
-        Returns:
-            Node: The reconstructed node instance with its full subtree.
-        """
-        node = _type_map[data["type"]](data["context"], data["label"])
-        node.children = [Node.build(child) for child in data["children"]]
-        return node
-        
-
     def __init__(self, context: Context, label: str = "Node"):
         """
         Initializes a new Node.
@@ -42,7 +26,7 @@ class Node:
         self.id: int = Node._id_counter
         Node._id_counter += 1
         self.content = {}
-        self.debug_info = {"hey" : 1, "hoo" : 3}
+        self.debug_info = {}
 
     def _tag_filter(self, element: "Node", tags: Set[str], ignore: Set[str]) -> bool:
         return all(tag in element.tags for tag in tags) and not any(tag in element.tags for tag in ignore)
@@ -92,12 +76,39 @@ class Node:
         data["type"] = self.__class__.__name__
         data["label"] = self.label
         data["context"] = self.context
+        data["init"] = ""
         if self.parent:
             data["pid"] = self.parent.id
         else:
             data["pid"] = -1
         data["children"] = [child.serialize() for child in self.children]
         return data
+    
+    @staticmethod
+    def build(data:dict) -> "Node":
+        _type_map = {cls.__name__: cls for cls in _all_subclasses(Node)}
+        _type_map["Node"] = Node
+        """ 
+        Build a new node from serialized data.
+        
+        Args:
+            data (dict): The dictionary containing serialized node data.
+            
+        Returns:
+            Node: The reconstructed node instance with its full subtree.
+        """
+        node = _type_map[data["type"]].new_root(data)
+        node.children = [Node.build(child) for child in data["children"]]
+        return node
+    
+    def new_root(data:dict) -> "Node":
+        """ 
+        Create the root of the node we are trying to build.
+        
+        Args:
+            data (dict): The dictionary containing serialized node data.
+        """
+        return Node(data["context"], data["label"])
     
     def search(self, id):
         """
@@ -208,7 +219,7 @@ class Node:
         )
 
     def __repr__(self):
-        return f'<{self.label} #{self.id}>'
+        return f'<{self.label} #{self.id}' + "".join([f' {key} = {value}' for key, value in self.debug_info.items()]) + '>' 
 
     def debug(self, spaces: int = 4):
         """
@@ -264,5 +275,3 @@ def _all_subclasses(cls):
         subclasses.update(_all_subclasses(subclass))
     return subclasses
 
-_type_map = {cls.__name__: cls for cls in _all_subclasses(Node)}
-_type_map["Node"] = Node

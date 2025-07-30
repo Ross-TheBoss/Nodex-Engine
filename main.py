@@ -1,44 +1,22 @@
-from engine import * 
-import pygame
+import nodex
 
-ctx = Context((1280, 720))
+ctx = nodex.Context((1280, 720))
 
-root = Node(ctx, "Root")
-menu = Node(ctx, "Menu")
-game = Node(ctx, "Game")
-tilemap = Node(ctx, "Tilemap")
-background = Node(ctx, "Background")
-player = Node(ctx, "Player")
-camera = Node(ctx, "Camera")
-
-background.order = 0
-tilemap.order = 1
-player.order = 2 
-
-root.link(menu) 
-root.link(game)
-
-game.link(tilemap)
-game.link(player)
-
-player.link(camera)
-
-for i in range(10):
-    tilemap.link(Node(ctx, f'Tile'))
+class Player(nodex.Node):
+    def __init__(self, position, context):
+        super().__init__(context, "Player")
+        self.x, self.y = position
+        self.debug_info = {"x" : self.x, "y" : self.y}
+        self.content["position"] = (self.x, self.y)
     
-print("# INITIAL TREE #")
-root.debug()
-
-tlm = tilemap.serialize()
-tilemap.unlink()
-
-print()
-print("# AFTER REMOVAL #")
-root.debug()
-print(tlm)
-root.search(tlm["pid"]).link(Node.build(tlm))
-print()
-print("# END #")
-root.debug()
-
-
+    def new_root(data):
+        player = Player((0, 0), data["context"])
+        player.x, player.y = data["position"]
+        return player
+    
+    
+p = Player((10, 10), ctx)
+print(p)
+save = p.serialize()
+p_copy = nodex.Node.build(save)
+print(p_copy)
