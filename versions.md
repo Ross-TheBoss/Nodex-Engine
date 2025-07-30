@@ -14,4 +14,4 @@
 
 # other
 
-+ colors 
++ pygame wrapper
