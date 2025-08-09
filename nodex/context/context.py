@@ -1,16 +1,25 @@
 import nodex
 import sys
 import time
-from nodex.wrappers.pygame.window import * 
-from nodex.wrappers.pygame.renderer import * 
-from nodex.wrappers.pygame.texture import * 
+
+from nodex.wrappers.pygame.window import *
+from nodex.wrappers.pygame.renderer import *
+from nodex.wrappers.pygame.texture import *
 from nodex.wrappers.pygame.timing import *
 from nodex.wrappers.pygame.input import *
-from nodex.wrappers.sdl2.window import * 
-from nodex.wrappers.sdl2.renderer import * 
-from nodex.wrappers.sdl2.texture import * 
+
+from nodex.wrappers.sdl2.window import *
+from nodex.wrappers.sdl2.renderer import *
+from nodex.wrappers.sdl2.texture import *
 from nodex.wrappers.sdl2.timing import *
 from nodex.wrappers.sdl2.input import *
+
+from nodex.wrappers.pyglet.window import *
+from nodex.wrappers.pyglet.renderer import *
+from nodex.wrappers.pyglet.texture import *
+from nodex.wrappers.pyglet.timing import *
+from nodex.wrappers.pyglet.input import *
+
 from typing import *
 
 DEFAULT_BACKEND = "pygame"
@@ -27,7 +36,8 @@ class Context:
     def texture_type(self) -> AbstractTexture:
         return {
             "pygame" : PygameTexture,
-            "sdl2" : SDLTexture
+            "sdl2" : SDLTexture,
+            "pyglet": PygletTexture,
         }[self.backend]
     
     def init_backend(self, size: Tuple[int, int]) -> None:
@@ -41,6 +51,11 @@ class Context:
             self.renderer = SDLRenderer(self.window)
             self.timer = SDLTiming(10000)
             self.input = SDL2Input()
+        elif self.backend == "pyglet":
+            self.window = PygletWindow(size)
+            self.renderer = PygletRenderer(self.window)  # PygletRenderer is not implemented yet
+            self.timer = PygletTiming(10000)  # PygletTiming is not implemented yet
+            self.input = PygletInput()  # PygletInput is not implemented yet
         else:
             raise ValueError(f"Backend {self.backend} not known.")
             
@@ -76,10 +91,8 @@ class Context:
     def dt(self) -> float:
         return self._dt
     
-    def load_texture(self, path: str) -> None:
+    def load_texture(self, path: str) -> AbstractTexture:
         return self.texture_type(path)
     
     def draw(self, texture: AbstractTexture, position: Tuple[int, int]) -> None:
         self.renderer.draw(texture, position)
-
-            

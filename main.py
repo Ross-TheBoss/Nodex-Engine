@@ -1,6 +1,6 @@
 import nodex
 
-context = nodex.Context((500, 500))
+context = nodex.Context((500, 500), backend="pygame")
 texture = context.load_texture("bird.png")
 
 @context.loop()

@@ -1,4 +1,5 @@
 import pygame
+from pyglet.window import key as pyglet_key
 
 def translate_pygame_key(key):
     return {
@@ -52,5 +53,54 @@ def translate_pygame_key(key):
         pygame.K_ESCAPE : "ESCAPE"
     }[key]
 
-
-
+def translate_pyglet_key(key):
+    return {
+        pyglet_key.LEFT : "LEFT",
+        pyglet_key.RIGHT : "RIGHT",
+        pyglet_key.UP : "UP",
+        pyglet_key.DOWN : "DOWN",
+        pyglet_key.SPACE : "SPACE",
+        pyglet_key.A : "A",
+        pyglet_key.B : "B",
+        pyglet_key.C : "C",
+        pyglet_key.D : "D",
+        pyglet_key.E : "E",
+        pyglet_key.F : "F",
+        pyglet_key.G : "G",
+        pyglet_key.H : "H",
+        pyglet_key.I : "I",
+        pyglet_key.J : "J",
+        pyglet_key.K : "K",
+        pyglet_key.L : "L",
+        pyglet_key.M : "M",
+        pyglet_key.N : "N",
+        pyglet_key.O : "O",
+        pyglet_key.P : "P",
+        pyglet_key.Q : "Q",
+        pyglet_key.R : "R",
+        pyglet_key.S : "S",
+        pyglet_key.T : "T",
+        pyglet_key.U : "U",
+        pyglet_key.V : "V",
+        pyglet_key.W : "W",
+        pyglet_key.X : "X",
+        pyglet_key.Y : "Y",
+        pyglet_key.Z : "Z",
+        pyglet_key._0: 0,
+        pyglet_key._1: 1,
+        pyglet_key._2: 2,
+        pyglet_key._3: 3,
+        pyglet_key._4: 4,
+        pyglet_key._5: 5,
+        pyglet_key._6: 6,
+        pyglet_key._7: 7,
+        pyglet_key._8: 8,
+        pyglet_key._9: 9,
+        pyglet_key.LCTRL  :    "LCTRL",
+        pyglet_key.RCTRL  :    "RCTRL",
+        pyglet_key.LSHIFT :   "LSHIFT",
+        pyglet_key.RSHIFT :   "RSHIFT",
+        pyglet_key.BACKSPACE : "BACKSPACE",
+        pyglet_key.NUM_ENTER : "KP_ENTER",
+        pyglet_key.ESCAPE : "ESCAPE",
+    }[key]
